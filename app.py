@@ -4,14 +4,23 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import google.generativeai as genai
+import img2pdf
+import fitz  # PyMuPDF
+from PIL import Image
 
-# App config
+# ---------- CONFIGURATION ----------
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
-DATABASE = 'database.db'
-UPLOAD_FOLDER = 'static/uploads'
+
+# ✅ Fix: Use a writable path for the database
+DB_FOLDER = 'db'
+DATABASE = os.path.join(DB_FOLDER, 'database.db')
+os.makedirs(DB_FOLDER, exist_ok=True)
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ✅ Gemini API key
 genai.configure(api_key="AIzaSyCdIAKn4sl9OBeVSkKvcZoRNVhONQUTwk0")
@@ -32,21 +41,16 @@ def init_db():
             content TEXT,
             file_path TEXT
         )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS qa_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            question TEXT,
+            answer TEXT
+        )''')
         conn.commit()
 
-def create_qa_table():
-    with sqlite3.connect(DATABASE) as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS qa_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                question TEXT,
-                answer TEXT
-            )
-        ''')
-        conn.commit()
-
-create_qa_table()
+if not os.path.exists(DATABASE):
+    init_db()
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE, timeout=10)
@@ -103,7 +107,7 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html')
 
-# Gemini doubt solver
+# ---------- Gemini Doubt Solver ----------
 chat_sessions = {}
 
 @app.route('/doubt_solver', methods=['GET', 'POST'])
@@ -123,7 +127,6 @@ def doubt_solver():
 
     chat = chat_sessions[user_id]
 
-    # 🟢 If viewing a past chat by chat_id
     if chat_id:
         with get_db_connection() as conn:
             chat_data = conn.execute(
@@ -133,8 +136,6 @@ def doubt_solver():
             if chat_data:
                 question = chat_data['question']
                 answer = chat_data['answer']
-
-    # 🟢 New chat submission
     elif request.method == 'POST':
         question = request.form['question']
         image = request.files.get('image')
@@ -147,7 +148,6 @@ def doubt_solver():
             image_url = url_for('static', filename='uploads/' + filename)
 
         try:
-            # 💬 Friendly step-by-step prompt
             prompt = f"""
 Please explain the following question in a beginner-friendly, clear format.
 
@@ -156,39 +156,28 @@ Please explain the following question in a beginner-friendly, clear format.
 - Use clear numbering (e.g., 1., 2., 3.)
 - Start each step on a **new line**
 - No long paragraphs
-- Include code **only when necessary**, and keep it short and simple
 
 🧠 Question:
 {question}
 """
             response = chat.send_message(prompt)
             answer = response.text
-
-            # Save to history
             with get_db_connection() as conn:
                 conn.execute(
                     'INSERT INTO qa_history (user_id, question, answer) VALUES (?, ?, ?)',
                     (user_id, question, answer)
                 )
                 conn.commit()
-
         except Exception as e:
             answer = f"❌ Error: {str(e)}"
 
-    # 🔁 Fetch history (for left sidebar)
     with get_db_connection() as conn:
         history = conn.execute(
             'SELECT * FROM qa_history WHERE user_id = ? ORDER BY id DESC',
             (user_id,)
         ).fetchall()
 
-    return render_template(
-        'doubt_solver.html',
-        question=question,
-        answer=answer,
-        image_url=image_url,
-        history=history
-    )
+    return render_template('doubt_solver.html', question=question, answer=answer, image_url=image_url, history=history)
 
 @app.route('/delete_qa/<int:qa_id>')
 def delete_qa(qa_id):
@@ -289,28 +278,18 @@ def notes():
         content = request.form['content']
         file = request.files.get('file')
         file_path = None
-
         if file and file.filename != '':
             filename = secure_filename(file.filename)
-            upload_dir = os.path.join('static', 'uploads')
-            os.makedirs(upload_dir, exist_ok=True)
-            file_path = os.path.join(upload_dir, filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-
         with get_db_connection() as conn:
-            conn.execute(
-                'INSERT INTO notes (user_id, title, content, file_path) VALUES (?, ?, ?, ?)',
-                (user_id, title, content, file_path)
-            )
+            conn.execute('INSERT INTO notes (user_id, title, content, file_path) VALUES (?, ?, ?, ?)',
+                         (user_id, title, content, file_path))
             conn.commit()
-
         return redirect(url_for('notes'))
 
     with get_db_connection() as conn:
-        notes = conn.execute(
-            'SELECT * FROM notes WHERE user_id = ?', (user_id,)
-        ).fetchall()
-
+        notes = conn.execute('SELECT * FROM notes WHERE user_id = ?', (user_id,)).fetchall()
     return render_template('notes.html', notes=notes)
 
 @app.route('/delete_note/<int:note_id>')
@@ -320,54 +299,28 @@ def delete_note(note_id):
         conn.commit()
     return redirect(url_for('notes'))
 
-@app.route('/delete_chat/<int:chat_id>', methods=['POST'])
-def delete_chat(chat_id):
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    with get_db_connection() as conn:
-        conn.execute('DELETE FROM qa_history WHERE id = ? AND user_id = ?', (chat_id, session['user_id']))
-        conn.commit()
-
-    return redirect('/doubt_solver')
-
-import img2pdf
-import fitz  # PyMuPDF
-from PIL import Image
-
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
 @app.route('/pdf_editor', methods=['GET', 'POST'])
 def pdf_editor():
     message = None
     pdf_generated_path = None
-    title = request.form.get('title')
-    if not title:
-         title = "my_pdf"
-         filename = f"{title.replace(' ', '_')}.pdf"
-
     if request.method == 'POST':
+        title = request.form.get('title') or "my_pdf"
         uploaded_images = request.files.getlist('images')
         image_paths = []
-
         for image in uploaded_images:
             if image and image.filename:
                 filename = secure_filename(image.filename)
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 image.save(filepath)
                 image_paths.append(filepath)
-
         if image_paths:
-            pdf_name = f"pdf_{len(os.listdir(app.config['UPLOAD_FOLDER']))}.pdf"
+            pdf_name = f"{title.replace(' ', '_')}_{len(os.listdir(app.config['UPLOAD_FOLDER']))}.pdf"
             output_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf_name)
             with open(output_path, "wb") as f:
                 f.write(img2pdf.convert(image_paths))
             pdf_generated_path = url_for('static', filename=f'uploads/{pdf_name}')
             message = "✅ PDF created successfully!"
-
     pdfs = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.endswith('.pdf')]
-
     return render_template("pdf_editor.html", message=message, pdf_generated_path=pdf_generated_path, pdfs=pdfs)
 
 @app.route('/delete_pdf/<filename>')
@@ -377,36 +330,6 @@ def delete_pdf(filename):
         os.remove(filepath)
     return redirect(url_for('pdf_editor'))
 
-
-
-import os
-import sqlite3
-
-def init_db():
-    if not os.path.exists("users.db"):
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL
-            )
-        ''')
-        conn.commit()
-        conn.close()
-        print("✅ Database initialized.")
-    else:
-        print("⚠️ Database already exists.")
-
-init_db()
-
-
 # ---------- MAIN ----------
 if __name__ == '__main__':
-    if not os.path.exists(DATABASE):
-        init_db()
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
     app.run(debug=True)
