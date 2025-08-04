@@ -378,7 +378,6 @@ def delete_pdf(filename):
     return redirect(url_for('pdf_editor'))
 
 
-import sqlite3
 
 def init_db():
     conn = sqlite3.connect('users.db')
