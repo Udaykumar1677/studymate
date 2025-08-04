@@ -1,159 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>📅 Study Reminders</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>Study Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #74ebd5, #acb6e5);
+            margin: 0;
+            padding: 0;
+        }
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #e3f2fd, #ffffff);
-      min-height: 100vh;
-      padding: 2rem;
-      color: #333;
-    }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
 
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-    h1 {
-      text-align: center;
-      color: #0d47a1;
-      margin-bottom: 2rem;
-    }
+        input[type="text"], input[type="date"], input[type="time"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
 
-    form {
-      display: grid;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
-    input, textarea, button {
-      padding: 0.9rem;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 1rem;
-    }
+        button:hover {
+            background-color: #0056b3;
+        }
 
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #0d47a1;
-      box-shadow: 0 0 5px rgba(13, 71, 161, 0.2);
-    }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
 
-    button {
-      background-color: #0d47a1;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s ease;
-      border: none;
-    }
+        li {
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
 
-    button:hover {
-      background-color: #1565c0;
-    }
+        .delete-form {
+            display: inline;
+        }
 
-    .reminder-list {
-      list-style: none;
-      padding: 0;
-    }
+        .delete-form button {
+            background-color: #e74c3c;
+            margin-left: 10px;
+        }
 
-    .reminder-item {
-      background: #f0f4ff;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .reminder-item p {
-      margin: 0;
-      font-size: 1rem;
-      color: #333;
-    }
-
-    .delete-btn {
-      background-color: #e53935;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 0.5rem 0.9rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.2s ease;
-    }
-
-    .delete-btn:hover {
-      background-color: #c62828;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 1.5rem;
-      }
-
-      h1 {
-        font-size: 1.6rem;
-      }
-
-      .reminder-item {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .delete-btn {
-        margin-top: 0.5rem;
-      }
-    }
-  </style>
+        .delete-form button:hover {
+            background-color: #c0392b;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>📚 Study Reminder</h1>
 
-  <div class="container">
-    <h1>📅 Study Reminders</h1>
-
-    <form method="POST">
-      <input type="text" name="title" placeholder="Reminder title (e.g. Physics Revision)" required>
-      <textarea name="description" placeholder="Reminder description or details" rows="3" required></textarea>
-      <input type="datetime-local" name="reminder_time" required>
-      <button type="submit">Add Reminder</button>
-    </form>
-
-    <ul class="reminder-list">
-      {% for reminder in reminders %}
-      <li class="reminder-item">
-        <div>
-          <p><strong>{{ reminder.title }}</strong></p>
-          <p>{{ reminder.description }}</p>
-          <p><small>🕒 {{ reminder.reminder_time }}</small></p>
-        </div>
-        <form action="{{ url_for('delete_reminder', reminder_id=reminder.id) }}" method="POST">
-          <button type="submit" class="delete-btn">Delete</button>
+        <form method="POST">
+            <input type="text" name="subject" placeholder="Enter subject" required>
+            <input type="date" name="date" required>
+            <input type="time" name="time" required>
+            <button type="submit">Add Reminder</button>
         </form>
-      </li>
-      {% else %}
-        <p style="text-align:center; color:#999;">No reminders yet. Add one above!</p>
-      {% endfor %}
-    </ul>
-  </div>
 
+        {% if reminders %}
+        <h2>🕒 Your Reminders</h2>
+        <ul>
+            {% for reminder in reminders %}
+            <li>
+                <strong>{{ reminder.subject }}</strong> — {{ reminder.date }} at {{ reminder.time }}
+                <form class="delete-form" action="{{ url_for('delete_reminder') }}" method="POST">
+                    <input type="hidden" name="subject" value="{{ reminder.subject }}">
+                    <input type="hidden" name="date" value="{{ reminder.date }}">
+                    <input type="hidden" name="time" value="{{ reminder.time }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
 </body>
 </html>

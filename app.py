@@ -260,13 +260,32 @@ study_reminders = []
 
 @app.route('/study_reminder', methods=['GET', 'POST'])
 def study_reminder():
+    if 'reminders' not in session:
+        session['reminders'] = []
+
     if request.method == 'POST':
         subject = request.form['subject']
         date = request.form['date']
         time = request.form['time']
-        study_reminders.append({'subject': subject, 'date': date, 'time': time})
+        session['reminders'].append({'subject': subject, 'date': date, 'time': time})
+        session.modified = True
         return redirect(url_for('study_reminder'))
-    return render_template('study_reminder.html', reminders=study_reminders)
+
+    return render_template('study_reminder.html', reminders=session['reminders'])
+
+@app.route('/delete_reminder', methods=['POST'])
+def delete_reminder():
+    subject = request.form['subject']
+    date = request.form['date']
+    time = request.form['time']
+    if 'reminders' in session:
+        session['reminders'] = [
+            r for r in session['reminders']
+            if not (r['subject'] == subject and r['date'] == date and r['time'] == time)
+        ]
+        session.modified = True
+    return redirect(url_for('study_reminder'))
+
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
