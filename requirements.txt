@@ -2,3 +2,4 @@ flask
 gunicorn
 img2pdf
 PyMuPDF
+google-generativeai
