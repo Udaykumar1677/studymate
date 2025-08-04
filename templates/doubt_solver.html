@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StudyMate AI Doubt Solver</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f172a;
+      color: #ffffff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #1e293b;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      color: #fff;
+      text-align: center;
+    }
+
+    .chat-button {
+      background-color: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .chat-history {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .chat-history-item {
+      background-color: #0f172a;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .chat-history-item:hover {
+      background-color: #334155;
+    }
+
+    .delete-button {
+      color: #f87171;
+      border: none;
+      background: none;
+      cursor: pointer;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .chat-header {
+      font-size: 1.8rem;
+      color: #3b82f6;
+      margin-bottom: 1.5rem;
+    }
+
+    .chat-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .chat-user {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .chat-question {
+      background-color: #0f172a;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .chat-ai {
+      background-color: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 6px solid #38bdf8;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .chat-form {
+      background-color: #111827;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    .chat-form textarea {
+      width: 100%;
+      height: 50px;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      border: none;
+      resize: none;
+      background-color: #1f2937;
+      color: white;
+    }
+
+    .chat-form input[type="file"] {
+      background-color: white;
+      border-radius: 5px;
+      padding: 4px;
+    }
+
+    .chat-form button {
+      background-color: #3b82f6;
+      color: white;
+      padding: 10px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .chat-form button:hover {
+      background-color: #2563eb;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <button class="chat-button" onclick="window.location.href='/doubt_solver'">+ New Chat</button>
+    <h2>History</h2>
+    <div class="chat-history">
+      {% for item in history %}
+        <div class="chat-history-item" onclick="window.location.href='/doubt_solver?chat_id={{ item['id'] }}'">
+          {{ item['question'][:30] }}...
+          <form method="POST" action="/delete_chat/{{ item['id'] }}">
+            <button type="submit" class="delete-button">Delete</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="chat-header">
+      🤖 StudyMate AI Doubt Solver
+    </div>
+
+    {% if question and answer %}
+      <div class="chat-container">
+        <div class="chat-user">You:</div>
+        <div class="chat-question">{{ question }}</div>
+
+        <div class="chat-user">AI:</div>
+        <div class="chat-ai">{{ answer }}</div>
+      </div>
+    {% endif %}
+
+    <form class="chat-form" method="POST" enctype="multipart/form-data">
+      <textarea name="question" placeholder="Type your doubt here..." required></textarea>
+      <input type="file" name="image">
+      <button type="submit">Ask AI</button>
+    </form>
+  </div>
+
+</body>
+</html>

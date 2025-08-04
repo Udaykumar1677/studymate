@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Save Notes</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+        form, .note-card { background: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input, textarea, button { width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        a { color: red; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h2>📓 Save Notes</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Note Title" required>
+        <textarea name="content" rows="4" placeholder="Write your note here..." required></textarea>
+        <input type="file" name="file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt">
+        <button type="submit">Save Note</button>
+    </form>
+
+    <h3>📁 Saved Notes</h3>
+    {% for note in notes %}
+        <div class="note-card">
+            <h4>{{ note.title }}</h4>
+            <p>{{ note.content }}</p>
+            {% if note.file_path %}
+                <p>📎 <a href="{{ '/' + note.file_path }}" target="_blank">View Attached File</a></p>
+            {% endif %}
+            <a href="{{ url_for('delete_note', note_id=note.id) }}">🗑️ Delete</a>
+        </div>
+    {% else %}
+        <p>No notes saved yet.</p>
+    {% endfor %}
+</body>
+</html>

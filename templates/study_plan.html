@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Study Plan Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            background: #007BFF;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 25px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📚 Study Plan Generator</h2>
+        <form method="POST">
+            <label for="days">Number of Days until Exam:</label>
+            <input type="number" name="days" min="1" required>
+
+            <label for="time_from">Preferred Study Start Time:</label>
+            <input type="time" name="time_from" required>
+
+            <label for="time_to">Preferred Study End Time:</label>
+            <input type="time" name="time_to" required>
+
+            <label for="subjects">Enter Subjects (comma separated):</label>
+            <textarea name="subjects" placeholder="e.g., Maths, Physics, Chemistry" required></textarea>
+
+            <button type="submit">Generate Study Plan</button>
+        </form>
+
+        {% if plan %}
+            <h3 style="margin-top: 30px;">🗓️ Your Study Plan</h3>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Study Time</th>
+                </tr>
+                {% for item in plan %}
+                <tr>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.subject }}</td>
+                    <td>{{ item.time }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>

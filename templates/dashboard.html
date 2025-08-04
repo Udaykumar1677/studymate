@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StudyMate Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e3f2fd, #e1f5fe);
+      min-height: 100vh;
+      display: flex;
+      color: #333;
+    }
+
+    .sidebar {
+      width: 260px;
+      background-color: #0d47a1;
+      padding: 2rem 1rem;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 1.6rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin: 1rem 0;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+      font-size: 1rem;
+    }
+
+    .sidebar a:hover {
+      background-color: #1565c0;
+    }
+
+    .main-content {
+      margin-left: 260px;
+      padding: 2rem;
+      flex: 1;
+    }
+
+    .main-content h1 {
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+      color: #0d47a1;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      margin-bottom: 0.8rem;
+      color: #1565c0;
+    }
+
+    .card p {
+      color: #555;
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .card a {
+      text-decoration: none;
+      background-color: #1e88e5;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .card a:hover {
+      background-color: #1565c0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>📘 StudyMate</h2>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('notes') }}">📝 Save & View Notes</a>
+    <a href="{{ url_for('doubt_solver') }}">🤖 Ask AI Doubt Solver</a>
+    <a href="{{ url_for('calculator') }}">🧮 Scientific Calculator</a>
+    <a href="{{ url_for('exam_planner') }}">📘 Exam Time Planner</a>
+    <a href="{{ url_for('study_plan') }}">📘 Preparation Plan Generator</a>
+    <a href="{{ url_for('study_reminder') }}">📅 Study Reminders</a>
+    <a href="{{ url_for('pdf_editor') }}">📄 PDF Editor</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </div>
+
+  <div class="main-content">
+    <h1>Welcome to StudyMate</h1>
+    <p style="margin-bottom: 2rem;">Empower your learning with AI-powered tools built just for you.</p>
+
+    <div class="cards">
+
+      <div class="card">
+        <h3>🤖 AI Doubt Solver</h3>
+        <p>Ask your study doubts and get step-by-step explanations from AI.</p>
+        <a href="{{ url_for('doubt_solver') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>📝 Save & View Notes</h3>
+        <p>Write and store important notes, topics, or formulas.</p>
+        <a href="{{ url_for('notes') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>🧮 Scientific Calculator</h3>
+        <p>Use an advanced scientific calculator right in your browser.</p>
+        <a href="{{ url_for('calculator') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>📘 Exam Time Planner</h3>
+        <p>Plan your exam preparation days and schedule with ease.</p>
+        <a href="{{ url_for('exam_planner') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>📘 Preparation Plan Generator</h3>
+        <p>Automatically generate a smart study plan based on your goals.</p>
+        <a href="{{ url_for('study_plan') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>📅 Study Reminders</h3>
+        <p>Set and view reminders for daily tasks and study sessions.</p>
+        <a href="{{ url_for('study_reminder') }}">Open</a>
+      </div>
+
+      <div class="card">
+        <h3>📄 PDF Editor</h3>
+        <p>Create PDFs from multiple images or edit existing ones quickly and easily.</p>
+        <a href="{{ url_for('pdf_editor') }}">Open</a>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
