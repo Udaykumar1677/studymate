@@ -91,12 +91,15 @@
       text-decoration: underline;
     }
 
-    .error {
-      color: red;
+    .error, .success, .danger {
       font-size: 0.9rem;
       text-align: center;
       margin-bottom: 1rem;
     }
+
+    .error { color: red; }
+    .success { color: green; }
+    .danger { color: crimson; }
 
     @media (max-width: 768px) {
       .register-box {
@@ -109,6 +112,14 @@
 
   <div class="register-box">
     <h2>Create Account</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
     {% if error %}
       <p class="error">{{ error }}</p>

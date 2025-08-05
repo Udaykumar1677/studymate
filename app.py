@@ -10,17 +10,18 @@ from PIL import Image
 
 # ---------- CONFIGURATION ----------
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = 'your_secret_key_here'  # Important for session
 
-# ✅ Fix: Use a writable path for the database
+# ✅ Setup folders
 DB_FOLDER = 'db'
 DATABASE = os.path.join(DB_FOLDER, 'database.db')
-os.makedirs(DB_FOLDER, exist_ok=True)
-
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# ✅ Ensure folders exist
+os.makedirs(DB_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # ✅ Gemini API key
 genai.configure(api_key="AIzaSyCdIAKn4sl9OBeVSkKvcZoRNVhONQUTwk0")
@@ -49,11 +50,12 @@ def init_db():
         )''')
         conn.commit()
 
+# ✅ Initialize database only if it doesn't exist
 if not os.path.exists(DATABASE):
     init_db()
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE, timeout=10)
+    conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -140,10 +142,9 @@ def doubt_solver():
         question = request.form['question']
         image = request.files.get('image')
 
-        if image and image.filename != '':
+        if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             image.save(filepath)
             image_url = url_for('static', filename='uploads/' + filename)
 
@@ -178,15 +179,6 @@ Please explain the following question in a beginner-friendly, clear format.
         ).fetchall()
 
     return render_template('doubt_solver.html', question=question, answer=answer, image_url=image_url, history=history)
-
-@app.route('/delete_qa/<int:qa_id>')
-def delete_qa(qa_id):
-    if 'user_id' not in session:
-        return redirect('/login')
-    with get_db_connection() as conn:
-        conn.execute('DELETE FROM qa_history WHERE id = ? AND user_id = ?', (qa_id, session['user_id']))
-        conn.commit()
-    return redirect(url_for('doubt_solver'))
 
 @app.route('/delete_chat/<int:qa_id>', methods=['POST'])
 def delete_chat(qa_id):
@@ -265,8 +257,6 @@ def study_plan():
             plan = [{'date': 'Error', 'subject': 'Invalid Input', 'time': str(e)}]
     return render_template('study_plan.html', plan=plan)
 
-study_reminders = []
-
 @app.route('/study_reminder', methods=['GET', 'POST'])
 def study_reminder():
     if 'reminders' not in session:
@@ -294,7 +284,6 @@ def delete_reminder():
         ]
         session.modified = True
     return redirect(url_for('study_reminder'))
-
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
