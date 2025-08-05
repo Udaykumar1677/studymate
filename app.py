@@ -188,6 +188,15 @@ def delete_qa(qa_id):
         conn.commit()
     return redirect(url_for('doubt_solver'))
 
+@app.route('/delete_chat/<int:qa_id>', methods=['POST'])
+def delete_chat(qa_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    with get_db_connection() as conn:
+        conn.execute('DELETE FROM qa_history WHERE id = ? AND user_id = ?', (qa_id, session['user_id']))
+        conn.commit()
+    return redirect(url_for('doubt_solver'))
+
 @app.route('/calculator', methods=['GET', 'POST'])
 def calculator():
     result = ''
